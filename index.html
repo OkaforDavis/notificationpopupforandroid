@@ -105,68 +105,105 @@ AndroidNotification.info('Info', 'FYI message');</code></pre>
     <script>
         // Initialize on page load
         window.addEventListener('load', () => {
+            console.log('🚀 App loaded');
             initializeNotifications();
             checkNotificationPermission();
         });
 
         // Check if notifications are enabled
         function checkNotificationPermission() {
+            console.log('📋 Checking notification permission...');
+            
             if ('Notification' in window) {
+                console.log('✓ Notifications API available');
+                console.log('Permission status:', Notification.permission);
+                
                 if (Notification.permission === 'granted') {
+                    console.log('✓ Notifications already granted');
                     document.getElementById('permissionGranted').style.display = 'block';
                     document.getElementById('enableNotifications').style.display = 'none';
                 } else if (Notification.permission === 'default') {
+                    console.log('⚠ Permission not requested yet - show enable button');
                     document.getElementById('enableNotifications').style.display = 'block';
                     document.getElementById('permissionGranted').style.display = 'none';
+                } else if (Notification.permission === 'denied') {
+                    console.error('✗ Notifications are blocked by the browser');
+                    document.getElementById('enableNotifications').style.display = 'none';
+                    document.getElementById('permissionGranted').style.display = 'none';
                 }
+            } else {
+                console.error('✗ Notifications not supported in this browser');
+                document.getElementById('enableNotifications').style.display = 'none';
             }
         }
 
         // Request notification permission
         function requestNotificationPermission() {
+            console.log('🔔 Requesting notification permission...');
+            
             if ('Notification' in window) {
                 Notification.requestPermission().then(permission => {
+                    console.log('Permission result:', permission);
+                    
                     if (permission === 'granted') {
+                        console.log('✓ Notifications enabled!');
                         document.getElementById('permissionGranted').style.display = 'block';
                         document.getElementById('enableNotifications').style.display = 'none';
                         // Test notification
-                        AndroidNotification.success('Notifications Enabled', 'You will now receive native Android notifications');
+                        setTimeout(() => {
+                            AndroidNotification.success('✓ Notifications Enabled', 'You will now receive native Android notifications');
+                        }, 500);
+                    } else {
+                        console.warn('✗ Permission denied or dismissed');
                     }
+                }).catch(error => {
+                    console.error('Error requesting permission:', error);
                 });
+            } else {
+                console.error('Notifications API not available');
             }
         }
 
         // Native notification functions
         function sendNativeSuccess() {
-            AndroidNotification.success(
+            console.log('Sending success notification...');
+            const result = AndroidNotification.success(
                 'Success! ✓',
                 'Your action completed successfully. This is a native Android notification!'
             );
+            if (!result) console.warn('⚠ Notification failed to send');
         }
 
         function sendNativeError() {
-            AndroidNotification.error(
+            console.log('Sending error notification...');
+            const result = AndroidNotification.error(
                 'Error! ✕',
                 'Something went wrong. Check your connection and try again.'
             );
+            if (!result) console.warn('⚠ Notification failed to send');
         }
 
         function sendNativeWarning() {
-            AndroidNotification.warning(
+            console.log('Sending warning notification...');
+            const result = AndroidNotification.warning(
                 'Warning ⚠',
                 'Please review this carefully before proceeding.'
             );
+            if (!result) console.warn('⚠ Notification failed to send');
         }
 
         function sendNativeInfo() {
-            AndroidNotification.info(
+            console.log('Sending info notification...');
+            const result = AndroidNotification.info(
                 'Information ⓘ',
                 'This is just for your information.'
             );
+            if (!result) console.warn('⚠ Notification failed to send');
         }
 
         // Simulate file upload with native notification
         function simulateUpload() {
+            console.log('Starting upload simulation...');
             const progressDemo = document.getElementById('progressDemo');
             const progressFill = document.getElementById('progressFill');
             
@@ -182,6 +219,7 @@ AndroidNotification.info('Info', 'FYI message');</code></pre>
                     progressFill.style.width = progress + '%';
                     progressDemo.style.display = 'none';
                     
+                    console.log('Upload complete, sending notification...');
                     // Show native Android notification
                     AndroidNotification.success(
                         'Upload Complete ✓',
@@ -194,11 +232,13 @@ AndroidNotification.info('Info', 'FYI message');</code></pre>
 
         // Simulate form submission with native notification
         function simulateFormSubmit() {
+            console.log('Starting form submission...');
             const progressDemo = document.getElementById('progressDemo');
             progressDemo.style.display = 'block';
             
             setTimeout(() => {
                 progressDemo.style.display = 'none';
+                console.log('Form submission complete, sending notification...');
                 AndroidNotification.success(
                     'Form Submitted ✓',
                     'Your form has been submitted successfully.'
@@ -208,11 +248,13 @@ AndroidNotification.info('Info', 'FYI message');</code></pre>
 
         // Simulate data fetch with native notification
         function simulateDataFetch() {
+            console.log('Starting data fetch...');
             const progressDemo = document.getElementById('progressDemo');
             progressDemo.style.display = 'block';
             
             setTimeout(() => {
                 progressDemo.style.display = 'none';
+                console.log('Data fetch complete, sending notification...');
                 AndroidNotification.success(
                     'Data Loaded ✓',
                     'Your data has been fetched from the server.'
@@ -222,6 +264,7 @@ AndroidNotification.info('Info', 'FYI message');</code></pre>
 
         // Simulate goal scored (like SoccerScore)
         function simulateGameGoal() {
+            console.log('Goal scored!');
             AndroidNotification.success(
                 '⚽ GOAL! Manchester United',
                 'Cristiano Ronaldo scored! 89\' - Score: 2-1'
@@ -230,6 +273,7 @@ AndroidNotification.info('Info', 'FYI message');</code></pre>
 
         // Simulate bet confirmation (like BetApps)
         function simulateBetting() {
+            console.log('Bet confirmed!');
             AndroidNotification.success(
                 '💰 Bet Confirmed',
                 'Wager: $50 | Odds: 2.5 | Potential Win: $125'

@@ -7,31 +7,32 @@
 const AndroidNotification = (() => {
     // Check if notifications are supported
     const isSupported = () => {
-        return 'Notification' in window && 'serviceWorker' in navigator;
+        return 'Notification' in window;
     };
 
     // Initialize service worker for background notifications
     const initializeServiceWorker = async () => {
         if ('serviceWorker' in navigator) {
             try {
-                const registration = await navigator.serviceWorker.register('sw.js');
-                console.log('Service Worker registered for notifications:', registration);
+                const registration = await navigator.serviceWorker.register('sw.js', { scope: '/' });
+                console.log('✓ Service Worker registered:', registration);
+                return true;
             } catch (error) {
-                console.warn('Service Worker registration failed:', error);
+                console.warn('⚠ Service Worker registration failed (optional):', error.message);
+                // This is OK - notifications still work without it
+                return false;
             }
         }
     };
 
-    // Icons for different notification types (base64 encoded or emoji)
-    const getIcon = (type) => {
-        // Use emoji icons for simplicity, or use image URLs
-        const icons = {
-            success: '✓',
-            error: '✕',
-            warning: '⚠',
-            info: 'ⓘ'
-        };
-        return icons[type] || icons.info;
+    // Create emoji data URI for icon
+    const createEmojiIcon = (emoji) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 100;
+        const ctx = canvas.getContext('2d');
+        ctx.font = '60px Arial';
+        ctx.fillText(emoji, 20, 70);
+        return canvas.toDataURL();
     };
 
     /**
@@ -41,38 +42,56 @@ const AndroidNotification = (() => {
      */
     const sendNative = (title, options = {}) => {
         if (!isSupported()) {
-            console.warn('Notifications not supported on this device');
-            return false;
+            console.warn('✗ Notifications not supported on this device');
+            return null;
         }
 
         // Check permission
         if (Notification.permission !== 'granted') {
-            console.warn('Notification permission not granted');
-            return false;
+            console.warn('✗ Notification permission not granted. Request permission first.');
+            return null;
         }
 
         try {
             const defaultOptions = {
-                icon: '/icon-192x192.png',
-                badge: '/badge-72x72.png',
                 requireInteraction: false,
                 tag: 'notification-' + Date.now(),
                 ...options
             };
+
+            // Don't include icon if it's an invalid path - let Android use default
+            if (defaultOptions.icon && defaultOptions.icon.startsWith('/')) {
+                delete defaultOptions.icon;
+            }
+            if (defaultOptions.badge && defaultOptions.badge.startsWith('/')) {
+                delete defaultOptions.badge;
+            }
+
+            console.log('📤 Sending notification:', { title, ...defaultOptions });
 
             // Send the notification
             const notification = new Notification(title, defaultOptions);
 
             // Handle notification click
             notification.onclick = () => {
+                console.log('Notification clicked');
                 window.focus();
                 notification.close();
             };
 
+            notification.onshow = () => {
+                console.log('✓ Notification shown');
+            };
+
+            notification.onerror = (error) => {
+                console.error('✗ Notification error:', error);
+            };
+
+            console.log('✓ Notification sent successfully');
             return notification;
         } catch (error) {
-            console.error('Failed to send notification:', error);
-            return false;
+            console.error('✗ Failed to send notification:', error);
+            return null;
         }
     };
 
@@ -81,25 +100,32 @@ const AndroidNotification = (() => {
      */
     const requestPermission = async () => {
         if (!isSupported()) {
-            console.warn('Notifications not supported');
+            console.warn('✗ Notifications not supported');
             return false;
         }
 
+        console.log('📋 Current permission:', Notification.permission);
+
         if (Notification.permission === 'granted') {
+            console.log('✓ Notifications already granted');
             return true;
         }
 
-        if (Notification.permission !== 'denied') {
-            try {
-                const permission = await Notification.requestPermission();
-                return permission === 'granted';
-            } catch (error) {
-                console.error('Error requesting notification permission:', error);
-                return false;
-            }
+        if (Notification.permission === 'denied') {
+            console.warn('✗ User has blocked notifications. Enable in browser settings.');
+            return false;
         }
 
-        return false;
+        // Permission is 'default' - ask user
+        try {
+            console.log('🔔 Requesting notification permission...');
+            const permission = await Notification.requestPermission();
+            console.log('✓ Permission result:', permission);
+            return permission === 'granted';
+        } catch (error) {
+            console.error('✗ Error requesting permission:', error);
+            return false;
+        }
     };
 
     /**
@@ -110,9 +136,7 @@ const AndroidNotification = (() => {
     const success = (title, message = '') => {
         return sendNative(title, {
             body: message,
-            tag: 'notification-success',
-            badge: '/badge-success.png',
-            icon: '/icon-success.png'
+            tag: 'notification-success'
         });
     };
 
@@ -125,8 +149,6 @@ const AndroidNotification = (() => {
         return sendNative(title, {
             body: message,
             tag: 'notification-error',
-            badge: '/badge-error.png',
-            icon: '/icon-error.png',
             requireInteraction: true  // Don't auto-dismiss errors
         });
     };
@@ -139,9 +161,7 @@ const AndroidNotification = (() => {
     const warning = (title, message = '') => {
         return sendNative(title, {
             body: message,
-            tag: 'notification-warning',
-            badge: '/badge-warning.png',
-            icon: '/icon-warning.png'
+            tag: 'notification-warning'
         });
     };
 
@@ -153,9 +173,7 @@ const AndroidNotification = (() => {
     const info = (title, message = '') => {
         return sendNative(title, {
             body: message,
-            tag: 'notification-info',
-            badge: '/badge-info.png',
-            icon: '/icon-info.png'
+            tag: 'notification-info'
         });
     };
 
