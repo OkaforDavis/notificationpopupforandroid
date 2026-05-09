@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <link rel="manifest" href="manifest.json">
+    <title>Advanced Examples - Native Android Notifications</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .example {
+            background: #f9f9f9;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+        .example h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+        .example pre {
+            background: white;
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+            margin: 10px 0 0 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Advanced Examples</h1>
+            <p>Real-world Android notification use cases</p>
+        </header>
+
+        <main>
+            <h2>1. Login Form with Validation</h2>
+            <div class="example">
+                <button class="btn btn-primary" onclick="loginExample()">Try Login Example</button>
+                <pre><code>async function handleLogin(email, password) {
+    // Validation
+    if (!email || !email.includes('@')) {
+        AndroidNotification.error('Invalid Email', 'Please enter a valid email address');
+        return;
+    }
+    if (password.length < 6) {
+        AndroidNotification.warning('Weak Password', 'Password must be at least 6 characters');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            body: JSON.stringify({ email, password })
+        });
+        
+        if (response.ok) {
+            AndroidNotification.success('Welcome! ✓', `Logged in as ${email}`);
+        } else {
+            AndroidNotification.error('Login Failed ✕', 'Invalid credentials');
+        }
+    } catch (error) {
+        AndroidNotification.error('Network Error ✕', 'Could not connect to server');
+    }
+}</code></pre>
+            </div>
+
+            <h2>2. SoccerScore-Style Goal Notification</h2>
+            <div class="example">
+                <button class="btn btn-primary" onclick="goalExample()">Try Goal Example</button>
+                <pre><code>function onGoalScored(team, player, minute, score) {
+    AndroidNotification.success(
+        `⚽ GOAL! ${team}`,
+        `${player} scored at ${minute}' - Score: ${score}`
+    );
+}
+
+// Real example
+onGoalScored('Manchester United', 'Cristiano Ronaldo', '89', '2-1');
+// Shows native Android notification:
+// Title: "⚽ GOAL! Manchester United"
+// Body: "Cristiano Ronaldo scored at 89' - Score: 2-1"</code></pre>
+            </div>
+
+            <h2>3. BetApps-Style Bet Confirmation</h2>
+            <div class="example">
+                <button class="btn btn-primary" onclick="betExample()">Try Bet Example</button>
+                <pre><code>function onBetConfirmed(betId, amount, odds, totalWin) {
+    AndroidNotification.success(
+        '💰 Bet Confirmed #' + betId,
+        `Wager: $${amount} | Odds: ${odds} | Potential: $${totalWin}`
+    );
+}
+
+// Real example
+onBetConfirmed('BET12345', 50, 2.5, 125);
+// Shows native Android notification with bet details</code></pre>
+            </div>
+
+            <h2>4. Payment Processing</h2>
+            <div class="example">
+                <button class="btn btn-primary" onclick="paymentExample()">Try Payment Example</button>
+                <pre><code>async function processPayment(amount, cardLast4) {
+    try {
+        const response = await fetch('/api/payment', {
+            method: 'POST',
+            body: JSON.stringify({ amount, cardLast4 })
+        });
+        
+        if (response.ok) {
+            AndroidNotification.success(
+                '💳 Payment Successful ✓',
+                `$${amount}.00 charged to card ending in ${cardLast4}`
+            );
+        } else {
+            AndroidNotification.error(
+                '💳 Payment Failed ✕',
+                'Check card details and try again'
+            );
+        }
+    } catch (error) {
+        AndroidNotification.error('Network Error ✕', 'Payment processing failed');
+    }
+}</code></pre>
+            </div>
+
+            <h2>5. File Upload with Progress</h2>
+            <div class="example">
+                <button class="btn btn-primary" onclick="uploadExample()">Try Upload Example</button>
+                <pre><code>async function uploadFileWithProgress(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+        const xhr = new XMLHttpRequest();
+        
+        xhr.upload.addEventListener('progress', (e) => {
+            const progress = Math.round((e.loaded / e.total) * 100);
+            console.log(`Upload progress: ${progress}%`);
+        });
+        
+        xhr.addEventListener('load', () => {
+            if (xhr.status === 200) {
+                AndroidNotification.success(
+                    'Upload Complete ✓',
+                    `${file.name} uploaded successfully`
+                );
+            }
+        });
+        
+        xhr.addEventListener('error', () => {
+            AndroidNotification.error('Upload Failed ✕', 'Could not upload file');
+        });
+        
+        xhr.open('POST', '/api/upload');
+        xhr.send(formData);
+    } catch (error) {
+        AndroidNotification.error('Error ✕', 'Upload failed: ' + error.message);
+    }
+}</code></pre>
+            </div>
+
+            <h2>6. Real-Time Chat Notification</h2>
+            <div class="example">
+                <button class="btn btn-primary" onclick="chatExample()">Try Chat Example</button>
+                <pre><code>// WebSocket for real-time messages
+const ws = new WebSocket('wss://api.example.com/chat');
+
+ws.onmessage = (event) => {
+    const message = JSON.parse(event.data);
+    
+    AndroidNotification.info(
+        '💬 New Message from ' + message.sender,
+        message.preview  // First 50 characters
+    );
+};
+
+// Usage example
+// User receives: "💬 New Message from John"
+// Body: "Hey, how are you doing today?"</code></pre>
+            </div>
+
+            <h2>7. Order Status Updates</h2>
+            <div class="example">
+                <button class="btn btn-primary" onclick="orderExample()">Try Order Example</button>
+                <pre><code>function updateOrderStatus(orderId, status) {
+    const statusMessages = {
+        'confirmed': { title: '✓ Order Confirmed', icon: 'success' },
+        'shipped': { title: '📦 Order Shipped', icon: 'success' },
+        'delivered': { title: '🎉 Order Delivered', icon: 'success' },
+        'cancelled': { title: '❌ Order Cancelled', icon: 'error' }
+    };
+    
+    const message = statusMessages[status];
+    
+    if (message.icon === 'success') {
+        AndroidNotification.success(
+            message.title,
+            `Order #${orderId} - ${status}`
+        );
+    } else {
+        AndroidNotification.error(
+            message.title,
+            `Order #${orderId} - ${status}`
+        );
+    }
+}</code></pre>
+            </div>
+
+            <h2>8. Weather Alerts</h2>
+            <div class="example">
+                <button class="btn btn-primary" onclick="weatherExample()">Try Weather Example</button>
+                <pre><code>function weatherAlert(type, location, condition) {
+    const alerts = {
+        'storm': { title: '⛈️ Severe Storm Warning', fn: AndroidNotification.error },
+        'rain': { title: '🌧️ Heavy Rain Alert', fn: AndroidNotification.warning },
+        'snow': { title: '❄️ Snow Warning', fn: AndroidNotification.warning },
+        'wind': { title: '💨 High Wind Alert', fn: AndroidNotification.warning }
+    };
+    
+    const alert = alerts[type];
+    alert.fn(alert.title, `${location}: ${condition}`);
+}</code></pre>
+            </div>
+
+            <h2>9. Error Recovery Pattern</h2>
+            <div class="example">
+                <button class="btn btn-primary" onclick="recoveryExample()">Try Recovery Example</button>
+                <pre><code>async function retryWithNotification(fn, maxRetries = 3) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            return await fn();
+        } catch (error) {
+            if (attempt === maxRetries) {
+                AndroidNotification.error(
+                    'Operation Failed ✕',
+                    `Failed after ${maxRetries} attempts`
+                );
+                throw error;
+            } else {
+                AndroidNotification.warning(
+                    'Retrying... ⟳',
+                    `Attempt ${attempt}/${maxRetries}`
+                );
+                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            }
+        }
+    }
+}</code></pre>
+            </div>
+
+            <h2>10. Scheduled Notifications</h2>
+            <div class="example">
+                <button class="btn btn-primary" onclick="scheduleExample()">Try Schedule Example</button>
+                <pre><code>function scheduleNotification(title, body, delaySeconds) {
+    setTimeout(() => {
+        AndroidNotification.success(title, body);
+    }, delaySeconds * 1000);
+}
+
+// Examples
+scheduleNotification('Reminder ⏰', 'Time to take a break', 5);
+scheduleNotification('Lunch Time 🍽️', 'Remember to eat', 3600);
+scheduleNotification('Daily Standup 📋', 'Team meeting in 5 minutes', 300);</code></pre>
+            </div>
+        </main>
+    </div>
+
+    <div id="notificationContainer" class="notification-container"></div>
+
+    <script src="notification.js"></script>
+    <script src="android-notification.js"></script>
+    <script>
+        window.addEventListener('load', checkNotificationPermission);
+
+        function checkNotificationPermission() {
+            if ('Notification' in window && Notification.permission !== 'granted') {
+                AndroidNotification.requestPermission();
+            }
+        }
+
+        function loginExample() {
+            const email = 'user@example.com';
+            const password = 'password123';
+            
+            if (!email.includes('@')) {
+                AndroidNotification.error('Invalid Email ✕', 'Please enter a valid email address');
+                return;
+            }
+            
+            setTimeout(() => {
+                AndroidNotification.success('Welcome! ✓', `Logged in as ${email}`);
+            }, 1000);
+        }
+
+        function goalExample() {
+            AndroidNotification.success(
+                '⚽ GOAL! Manchester United',
+                'Cristiano Ronaldo scored at 89\' - Score: 2-1'
+            );
+        }
+
+        function betExample() {
+            AndroidNotification.success(
+                '💰 Bet Confirmed #BET12345',
+                'Wager: $50 | Odds: 2.5 | Potential: $125'
+            );
+        }
+
+        function paymentExample() {
+            setTimeout(() => {
+                AndroidNotification.success(
+                    '💳 Payment Successful ✓',
+                    '$99.99 charged to card ending in 4242'
+                );
+            }, 1000);
+        }
+
+        function uploadExample() {
+            AndroidNotification.success(
+                'Upload Complete ✓',
+                'document.pdf uploaded successfully to server'
+            );
+        }
+
+        function chatExample() {
+            AndroidNotification.info(
+                '💬 New Message from John',
+                'Hey, how are you doing today?'
+            );
+        }
+
+        function orderExample() {
+            AndroidNotification.success(
+                '📦 Order Shipped',
+                'Order #ORD123456 - tracking number: ABC789'
+            );
+        }
+
+        function weatherExample() {
+            AndroidNotification.warning(
+                '⛈️ Severe Storm Warning',
+                'New York: Heavy thunderstorms expected in the next hour'
+            );
+        }
+
+        function recoveryExample() {
+            AndroidNotification.warning(
+                'Retrying... ⟳',
+                'Attempt 2/3'
+            );
+            setTimeout(() => {
+                AndroidNotification.success(
+                    'Connection Restored ✓',
+                    'Successfully reconnected to server'
+                );
+            }, 2000);
+        }
+
+        function scheduleExample() {
+            AndroidNotification.success(
+                'Reminder ⏰',
+                'Time to take a break'
+            );
+        }
+    </script>
+</body>
+</html>
+    <div class="container">
+        <header>
+            <h1>Advanced Examples</h1>
+            <p>Real-world use cases and patterns</p>
+        </header>
+
+        <main>
+            <h2>1. Login Form with Validation</h2>
+            <div class="example">
+                <button class="btn btn-primary" onclick="loginExample()">Try Login Example</button>
+                <pre><code>function handleLogin(email, password) {
+    // Validation
+    if (!email || !email.includes('@')) {
+        Notification.error('Invalid Email', 'Please enter a valid email address');
+        return;
+    }
+    if (password.length < 6) {
+        Notification.warning('Weak Password', 'Password must be at least 6 characters');
+        return;
+    }
+
+    // Attempt login
+    fetch('/api/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password })
+    })
+    .then(res => {
+        if (res.ok) {
+            Notification.success('Welcome!', `Logged in as ${email}`, 2000);
+            // Redirect or update UI
+        } else {
+            Notification.error('Login Failed', 'Invalid credentials');
+        }
+    })
+    .catch(err => {
+        Notification.error('Network Error', 'Could not connect to server');
+    });
+}</code></pre>
+            </div>
+
+            <h2>2. API Call Chain (Sequential Operations)</h2>
+            <div class="example">
+                <button class="btn btn-primary" onclick="chainExample()">Try Chain Example</button>
+                <pre><code>async function fetchUserData(userId) {
+    try {
+        Notification.info('Loading...', 'Fetching user data', 0);
+        
+        const response = await fetch(`/api/users/${userId}`);
+        const data = await response.json();
+        
+        Notification.clearAll();
+        Notification.success('User Loaded', `Found ${data.name}`);
+        
+        return data;
+    } catch (error) {
+        Notification.clearAll();
+        Notification.error('Load Failed', 'Could not fetch user data');
+    }
+}</code></pre>
+            </div>
+
+            <h2>3. Error Handling with Recovery Options</h2>
+            <div class="example">
+                <button class="btn btn-primary" onclick="errorExample()">Try Error Example</button>
+                <pre><code>function handleError(error, retryFn) {
+    const errorMessages = {
+        'NETWORK_ERROR': 'No internet connection. Check your network.',
+        'TIMEOUT': 'Request took too long. Please try again.',
+        'SERVER_ERROR': 'Server error. Please try again later.',
+        'NOT_FOUND': 'Resource not found.',
+    };
+
+    const message = errorMessages[error.code] || 'An error occurred';
+    
+    if (retryFn) {
+        Notification.error('Error!', message + ' Retrying...', 3000);
+        setTimeout(() => retryFn(), 3000);
+    } else {
+        Notification.error('Error!', message);
+    }
+}</code></pre>
+            </div>
+
+            <h2>4. Batch Operations with Progress</h2>
+            <div class="example">
+                <button class="btn btn-primary" onclick="batchExample()">Try Batch Example</button>
+                <pre><code>async function processBatch(items) {
+    let completed = 0;
+    let failed = 0;
+
+    for (const item of items) {
+        try {
+            await processItem(item);
+            completed++;
+            Notification.info('Progress', 
+                `${completed}/${items.length} items processed`, 2000);
+        } catch (error) {
+            failed++;
+            console.error(`Failed to process ${item.id}`);
+        }
+    }
+
+    if (failed === 0) {
+        Notification.success('Done!', 
+            `All ${completed} items processed successfully`);
+    } else {
+        Notification.warning('Partial Success', 
+            `${completed} succeeded, ${failed} failed`);
+    }
+}</code></pre>
+            </div>
+
+            <h2>5. Form Auto-Save with Debounce</h2>
+            <div class="example">
+                <button class="btn btn-primary" onclick="autosaveExample()">Try Auto-save Example</button>
+                <pre><code>let saveTimeout;
+
+function handleFormChange(formData) {
+    // Clear previous timeout
+    clearTimeout(saveTimeout);
+    
+    // Show saving status
+    Notification.info('Saving...', 'Your changes are being saved', 0);
+    
+    // Debounce the save request
+    saveTimeout = setTimeout(() => {
+        fetch('/api/save', {
+            method: 'POST',
+            body: JSON.stringify(formData)
+        })
+        .then(() => {
+            Notification.clearAll();
+            Notification.success('Saved', 'Your changes have been saved', 2000);
+        })
+        .catch(() => {
+            Notification.clearAll();
+            Notification.error('Save Failed', 'Could not save changes');
+        });
+    }, 1000); // Save after 1 second of no changes
+}</code></pre>
+            </div>
+
+            <h2>6. Multi-step Process with Validation</h2>
+            <div class="example">
+                <button class="btn btn-primary" onclick="multistepExample()">Try Multi-step Example</button>
+                <pre><code>const steps = [
+    { name: 'Validate', fn: validateData },
+    { name: 'Upload', fn: uploadFile },
+    { name: 'Process', fn: processFile },
+    { name: 'Complete', fn: finishProcess }
+];
+
+async function executeSteps() {
+    for (let i = 0; i < steps.length; i++) {
+        const step = steps[i];
+        Notification.info(`Step ${i + 1}/${steps.length}`, 
+            `${step.name}...`, 0);
+        
+        try {
+            await step.fn();
+        } catch (error) {
+            Notification.clearAll();
+            Notification.error('Process Failed', 
+                `Failed at step: ${step.name}`);
+            return;
+        }
+    }
+    
+    Notification.clearAll();
+    Notification.success('Complete', 'All steps finished successfully!');
+}</code></pre>
+            </div>
+
+            <h2>7. Network Status Monitoring</h2>
+            <div class="example">
+                <button class="btn btn-primary" onclick="setupNetworkMonitoring()">Setup Network Monitor</button>
+                <pre><code>// Monitor network status changes
+window.addEventListener('online', () => {
+    Notification.success('Online', 'Connection restored');
+});
+
+window.addEventListener('offline', () => {
+    Notification.error('Offline', 'No internet connection', 0);
+});
+
+// Check connection on page load
+if (!navigator.onLine) {
+    Notification.warning('Offline Mode', 'You are currently offline');
+}</code></pre>
+            </div>
+
+            <h2>8. Custom Notification Styling</h2>
+            <div class="example">
+                <button class="btn btn-primary" onclick="customStyledExample()">Show Custom Notification</button>
+                <pre><code>// Create a custom notification with additional styling
+const notif = Notification.success('Custom', 'This is styled');
+
+// Modify the notification element
+if (notif) {
+    notif.style.borderRadius = '20px';
+    notif.style.background = 'linear-gradient(45deg, #ff6b6b, #ee5a6f)';
+    notif.style.color = 'white';
+}
+
+// Or add custom CSS classes
+notif.classList.add('custom-class');</code></pre>
+            </div>
+
+            <h2>9. Notification Queue Management</h2>
+            <div class="example">
+                <button class="btn btn-primary" onclick="queueExample()">Try Queue Example</button>
+                <pre><code>// Configure to show only 2 notifications at a time
+Notification.setConfig({ maxNotifications: 2 });
+
+// Queue multiple notifications
+for (let i = 1; i <= 5; i++) {
+    setTimeout(() => {
+        Notification.info(`Notification ${i}`, 
+            `This is message number ${i}`, 3000);
+    }, i * 500);
+}
+
+// Older notifications auto-dismiss to make room
+// Max 2 will be visible at once</code></pre>
+            </div>
+
+            <h2>10. Accessibility Best Practices</h2>
+            <div class="example">
+                <button class="btn btn-primary" onclick="a11yExample()">Try Accessible Notification</button>
+                <pre><code>// The notification system is built with accessibility in mind
+
+// Use descriptive titles and messages
+Notification.error('Payment Failed', 
+    'Your payment could not be processed. Check card details.');
+
+// Don't rely solely on notifications for critical info
+// Provide alternate feedback (error messages in form, etc)
+
+// Clear previous notifications when showing important ones
+Notification.clearAll();
+Notification.error('Critical', 'This requires your attention', 0);
+
+// Screen readers will announce the notification automatically
+// Use keyboard-accessible close buttons (included by default)</code></pre>
+            </div>
+        </main>
+    </div>
+
+    <div id="notificationContainer" class="notification-container"></div>
+
+    <script src="notification.js"></script>
+    <script>
+        function loginExample() {
+            // Simulate form submission
+            const email = 'user@example.com';
+            const password = 'password123';
+            
+            if (!email.includes('@')) {
+                Notification.error('Invalid Email', 'Please enter a valid email address');
+                return;
+            }
+            if (password.length < 6) {
+                Notification.warning('Weak Password', 'Password must be at least 6 characters');
+                return;
+            }
+            
+            setTimeout(() => {
+                Notification.success('Welcome!', `Logged in as ${email}`, 2000);
+            }, 1000);
+        }
+
+        function chainExample() {
+            Notification.info('Loading...', 'Fetching user data', 0);
+            
+            setTimeout(() => {
+                Notification.clearAll();
+                Notification.success('User Loaded', 'Found John Doe');
+            }, 2000);
+        }
+
+        function errorExample() {
+            Notification.error('Network Error', 'No internet connection. Check your network.', 3000);
+        }
+
+        function batchExample() {
+            let completed = 0;
+            const total = 5;
+            
+            for (let i = 1; i <= total; i++) {
+                setTimeout(() => {
+                    completed = i;
+                    Notification.info('Progress', 
+                        `${completed}/${total} items processed`, 2000);
+                }, i * 500);
+            }
+            
+            setTimeout(() => {
+                Notification.success('Done!', 'All items processed successfully');
+            }, total * 500 + 500);
+        }
+
+        function autosaveExample() {
+            Notification.info('Saving...', 'Your changes are being saved', 0);
+            setTimeout(() => {
+                Notification.clearAll();
+                Notification.success('Saved', 'Your changes have been saved', 2000);
+            }, 1500);
+        }
+
+        function multistepExample() {
+            const steps = ['Validate', 'Upload', 'Process', 'Complete'];
+            
+            steps.forEach((step, idx) => {
+                setTimeout(() => {
+                    Notification.info(`Step ${idx + 1}/${steps.length}`, `${step}...`, 0);
+                }, idx * 1000);
+            });
+            
+            setTimeout(() => {
+                Notification.clearAll();
+                Notification.success('Complete', 'All steps finished successfully!');
+            }, steps.length * 1000);
+        }
+
+        function setupNetworkMonitoring() {
+            Notification.success('Monitoring', 'Network monitoring setup complete');
+            
+            if (!navigator.onLine) {
+                Notification.warning('Offline Mode', 'You are currently offline');
+            }
+        }
+
+        function customStyledExample() {
+            const notif = Notification.success('Custom', 'This notification is styled');
+            if (notif) {
+                notif.style.borderRadius = '20px';
+            }
+        }
+
+        function queueExample() {
+            Notification.setConfig({ maxNotifications: 2 });
+            
+            for (let i = 1; i <= 5; i++) {
+                setTimeout(() => {
+                    Notification.info(`Notification ${i}`, 
+                        `This is message number ${i}`, 3000);
+                }, i * 500);
+            }
+        }
+
+        function a11yExample() {
+            Notification.error('Payment Failed', 
+                'Your payment could not be processed. Check card details.');
+        }
+    </script>
+</body>
+</html>

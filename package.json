@@ -1,0 +1,56 @@
+{
+  "name": "notification-popup-for-android",
+  "version": "1.0.0",
+  "description": "A lightweight, responsive notification popup system optimized for Android web applications",
+  "type": "module",
+  "files": [
+    "index.html",
+    "examples.html",
+    "notification.js",
+    "styles.css",
+    "README.md",
+    "QUICK_START.md",
+    "CONFIGURATION.md"
+  ],
+  "keywords": [
+    "notification",
+    "popup",
+    "toast",
+    "android",
+    "responsive",
+    "mobile",
+    "web"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/notification-popup-for-android"
+  },
+  "features": {
+    "responsive": "Works on all screen sizes from 320px to 4K",
+    "android_optimized": "Designed specifically for Android devices",
+    "zero_dependencies": "No external libraries required",
+    "lightweight": "Only ~15KB total (CSS + JS)",
+    "accessible": "WCAG compliant with ARIA labels",
+    "customizable": "Fully configurable colors, animations, and positions",
+    "animations": "Smooth CSS animations for great UX",
+    "types": [
+      "success",
+      "error",
+      "warning",
+      "info"
+    ]
+  },
+  "usage": {
+    "basic": "Notification.success('Title', 'Message');",
+    "with_duration": "Notification.error('Title', 'Message', 3000);",
+    "manual_dismiss": "Notification.warning('Title', 'Message', 0);"
+  },
+  "documentation": {
+    "quick_start": "See QUICK_START.md for getting started in 2 minutes",
+    "advanced": "See CONFIGURATION.md for advanced customization",
+    "examples": "Open examples.html in your browser for live demos",
+    "full_api": "See README.md for complete API documentation"
+  }
+}

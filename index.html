@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <meta name="description" content="Native Android Notification System">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23667eea' width='192' height='192'/><text x='50%' y='50%' font-size='100' fill='white' text-anchor='middle' dominant-baseline='central'>🔔</text></svg>">
+    <title>Android Notification System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔔 Android Notification System</h1>
+            <p>Native Android notifications like BetApps & SoccerScore</p>
+            <div id="permissionStatus" class="permission-status">
+                <button id="enableNotifications" class="btn btn-permission" onclick="requestNotificationPermission()" style="display: none;">
+                    Enable Notifications
+                </button>
+                <div id="permissionGranted" class="permission-granted" style="display: none;">
+                    ✓ Notifications Enabled
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <section class="controls">
+                <h2>🎯 Native Android Notifications</h2>
+                
+                <button class="btn btn-success" onclick="sendNativeSuccess()">
+                    ✓ Success Notification
+                </button>
+
+                <button class="btn btn-error" onclick="sendNativeError()">
+                    ✕ Error Notification
+                </button>
+
+                <button class="btn btn-warning" onclick="sendNativeWarning()">
+                    ⚠ Warning Notification
+                </button>
+
+                <button class="btn btn-info" onclick="sendNativeInfo()">
+                    ⓘ Info Notification
+                </button>
+
+                <hr>
+
+                <h2>📱 Simulate Real Actions</h2>
+                <button class="btn btn-primary" onclick="simulateUpload()">
+                    Upload File (Android Notification)
+                </button>
+
+                <button class="btn btn-primary" onclick="simulateFormSubmit()">
+                    Submit Form (Android Notification)
+                </button>
+
+                <button class="btn btn-primary" onclick="simulateDataFetch()">
+                    Fetch Data (Android Notification)
+                </button>
+
+                <button class="btn btn-primary" onclick="simulateGameGoal()">
+                    ⚽ Goal Scored (Like SoccerScore)
+                </button>
+
+                <button class="btn btn-primary" onclick="simulateBetting()">
+                    💰 Bet Confirmed (Like BetApps)
+                </button>
+
+                <div class="progress-demo" id="progressDemo" style="display: none; margin-top: 20px;">
+                    <p>Processing...</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="info">
+                <h2>💻 How to Use Native Notifications</h2>
+                <pre><code>// Request permission first
+await Notification.requestPermission();
+
+// Send native Android notification
+Notification.sendNative('Title', {
+    body: 'Notification message',
+    icon: '/icon-192x192.png',
+    badge: '/badge-72x72.png',
+    tag: 'notification-id'
+});
+
+// Or use the helper
+AndroidNotification.success('Done!', 'Task completed');
+AndroidNotification.error('Error', 'Something failed');
+AndroidNotification.warning('Warning', 'Check this');
+AndroidNotification.info('Info', 'FYI message');</code></pre>
+            </section>
+        </main>
+    </div>
+
+    <div id="notificationContainer" class="notification-container"></div>
+
+    <script src="notification.js"></script>
+    <script src="android-notification.js"></script>
+    <script>
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            initializeNotifications();
+            checkNotificationPermission();
+        });
+
+        // Check if notifications are enabled
+        function checkNotificationPermission() {
+            if ('Notification' in window) {
+                if (Notification.permission === 'granted') {
+                    document.getElementById('permissionGranted').style.display = 'block';
+                    document.getElementById('enableNotifications').style.display = 'none';
+                } else if (Notification.permission === 'default') {
+                    document.getElementById('enableNotifications').style.display = 'block';
+                    document.getElementById('permissionGranted').style.display = 'none';
+                }
+            }
+        }
+
+        // Request notification permission
+        function requestNotificationPermission() {
+            if ('Notification' in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        document.getElementById('permissionGranted').style.display = 'block';
+                        document.getElementById('enableNotifications').style.display = 'none';
+                        // Test notification
+                        AndroidNotification.success('Notifications Enabled', 'You will now receive native Android notifications');
+                    }
+                });
+            }
+        }
+
+        // Native notification functions
+        function sendNativeSuccess() {
+            AndroidNotification.success(
+                'Success! ✓',
+                'Your action completed successfully. This is a native Android notification!'
+            );
+        }
+
+        function sendNativeError() {
+            AndroidNotification.error(
+                'Error! ✕',
+                'Something went wrong. Check your connection and try again.'
+            );
+        }
+
+        function sendNativeWarning() {
+            AndroidNotification.warning(
+                'Warning ⚠',
+                'Please review this carefully before proceeding.'
+            );
+        }
+
+        function sendNativeInfo() {
+            AndroidNotification.info(
+                'Information ⓘ',
+                'This is just for your information.'
+            );
+        }
+
+        // Simulate file upload with native notification
+        function simulateUpload() {
+            const progressDemo = document.getElementById('progressDemo');
+            const progressFill = document.getElementById('progressFill');
+            
+            progressDemo.style.display = 'block';
+            progressFill.style.width = '0%';
+
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 30;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    progressFill.style.width = progress + '%';
+                    progressDemo.style.display = 'none';
+                    
+                    // Show native Android notification
+                    AndroidNotification.success(
+                        'Upload Complete ✓',
+                        'Your file has been uploaded successfully to the server.'
+                    );
+                }
+                progressFill.style.width = progress + '%';
+            }, 500);
+        }
+
+        // Simulate form submission with native notification
+        function simulateFormSubmit() {
+            const progressDemo = document.getElementById('progressDemo');
+            progressDemo.style.display = 'block';
+            
+            setTimeout(() => {
+                progressDemo.style.display = 'none';
+                AndroidNotification.success(
+                    'Form Submitted ✓',
+                    'Your form has been submitted successfully.'
+                );
+            }, 2000);
+        }
+
+        // Simulate data fetch with native notification
+        function simulateDataFetch() {
+            const progressDemo = document.getElementById('progressDemo');
+            progressDemo.style.display = 'block';
+            
+            setTimeout(() => {
+                progressDemo.style.display = 'none';
+                AndroidNotification.success(
+                    'Data Loaded ✓',
+                    'Your data has been fetched from the server.'
+                );
+            }, 1500);
+        }
+
+        // Simulate goal scored (like SoccerScore)
+        function simulateGameGoal() {
+            AndroidNotification.success(
+                '⚽ GOAL! Manchester United',
+                'Cristiano Ronaldo scored! 89\' - Score: 2-1'
+            );
+        }
+
+        // Simulate bet confirmation (like BetApps)
+        function simulateBetting() {
+            AndroidNotification.success(
+                '💰 Bet Confirmed',
+                'Wager: $50 | Odds: 2.5 | Potential Win: $125'
+            );
+        }
+    </script>
+</body>
+</html>
