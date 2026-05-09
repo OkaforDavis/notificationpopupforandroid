@@ -1,23 +1,25 @@
 /**
- * Notification System
+ * NotifyPopup - In-app notification popup system
  * A lightweight notification popup system for web applications
  * Works great on mobile devices including Android
+ * 
+ * NOTE: Named "NotifyPopup" to avoid overwriting the browser's native Notification API
  */
 
-const Notification = (() => {
+const NotifyPopup = (() => {
     // Configuration
     const config = {
-        defaultDuration: 4000, // milliseconds
-        animationDuration: 300, // milliseconds
+        defaultDuration: 5000, // milliseconds
+        animationDuration: 400, // milliseconds
         maxNotifications: 5,
     };
 
-    // Icons for different notification types
+    // Icons for different notification types (SVG-based for crisp rendering)
     const icons = {
-        success: '✓',
-        error: '✕',
-        warning: '⚠',
-        info: 'ⓘ',
+        success: `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="11" fill="currentColor" opacity="0.15"/><path d="M6.5 11.5L9.5 14.5L15.5 8.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+        error: `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="11" fill="currentColor" opacity="0.15"/><path d="M8 8L14 14M14 8L8 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
+        warning: `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 2L21 20H1L11 2Z" fill="currentColor" opacity="0.15"/><path d="M11 9V13M11 16V16.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
+        info: `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="11" fill="currentColor" opacity="0.15"/><path d="M11 10V16M11 7V7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
     };
 
     /**
@@ -42,20 +44,53 @@ const Notification = (() => {
         notificationDiv.className = `notification ${type}`;
 
         const icon = icons[type] || icons.info;
+        const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         notificationDiv.innerHTML = `
-            <div class="notification-icon">${icon}</div>
-            <div class="notification-content">
-                <div class="notification-title">${escapeHtml(title)}</div>
-                ${message ? `<div class="notification-message">${escapeHtml(message)}</div>` : ''}
+            <div class="notification-icon-wrap">
+                <div class="notification-icon">${icon}</div>
             </div>
-            <button class="notification-close" aria-label="Close notification">×</button>
+            <div class="notification-content">
+                <div class="notification-header">
+                    <div class="notification-title">${escapeHtml(title)}</div>
+                    <span class="notification-time">${timestamp}</span>
+                </div>
+                ${message ? `<div class="notification-message">${escapeHtml(message)}</div>` : ''}
+                <div class="notification-progress-bar"><div class="notification-progress-fill"></div></div>
+            </div>
+            <button class="notification-close" aria-label="Close notification">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1L13 13M13 1L1 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </button>
         `;
 
         // Close button functionality
         const closeBtn = notificationDiv.querySelector('.notification-close');
         closeBtn.addEventListener('click', () => {
             removeNotification(notificationDiv);
+        });
+
+        // Swipe to dismiss on mobile
+        let startX = 0;
+        let currentX = 0;
+        notificationDiv.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+        }, { passive: true });
+        notificationDiv.addEventListener('touchmove', (e) => {
+            currentX = e.touches[0].clientX;
+            const diff = currentX - startX;
+            if (diff > 0) {
+                notificationDiv.style.transform = `translateX(${diff}px)`;
+                notificationDiv.style.opacity = Math.max(0, 1 - diff / 200);
+            }
+        }, { passive: true });
+        notificationDiv.addEventListener('touchend', () => {
+            const diff = currentX - startX;
+            if (diff > 100) {
+                removeNotification(notificationDiv);
+            } else {
+                notificationDiv.style.transform = '';
+                notificationDiv.style.opacity = '';
+            }
         });
 
         return notificationDiv;
@@ -65,6 +100,7 @@ const Notification = (() => {
      * Remove a notification with animation
      */
     const removeNotification = (element) => {
+        if (element.classList.contains('removing')) return;
         element.classList.add('removing');
         setTimeout(() => {
             element.remove();
@@ -85,14 +121,57 @@ const Notification = (() => {
      */
     const checkMaxNotifications = () => {
         const container = getContainer();
-        const notifications = container.querySelectorAll('.notification');
+        const notifications = container.querySelectorAll('.notification:not(.removing)');
         
-        while (notifications.length > config.maxNotifications) {
-            const oldest = notifications[0];
-            removeNotification(oldest);
-            notifications.forEach((el, idx) => {
-                notifications[idx] = el;
-            });
+        if (notifications.length > config.maxNotifications) {
+            for (let i = 0; i < notifications.length - config.maxNotifications; i++) {
+                removeNotification(notifications[i]);
+            }
+        }
+    };
+
+    /**
+     * Play notification sound (subtle)
+     */
+    const playSound = (type) => {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            const frequencies = {
+                success: [523, 659],
+                error: [330, 262],
+                warning: [440, 440],
+                info: [523, 523],
+            };
+            
+            const freqs = frequencies[type] || frequencies.info;
+            oscillator.frequency.setValueAtTime(freqs[0], ctx.currentTime);
+            oscillator.frequency.setValueAtTime(freqs[1], ctx.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(0.05, ctx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+            oscillator.start(ctx.currentTime);
+            oscillator.stop(ctx.currentTime + 0.3);
+        } catch(e) {
+            // Sound not critical
+        }
+    };
+
+    /**
+     * Trigger device vibration on Android
+     */
+    const vibrate = (type) => {
+        if ('vibrate' in navigator) {
+            const patterns = {
+                success: [50],
+                error: [100, 50, 100],
+                warning: [80, 40, 80],
+                info: [30],
+            };
+            navigator.vibrate(patterns[type] || [30]);
         }
     };
 
@@ -119,14 +198,26 @@ const Notification = (() => {
         // Check max notifications
         checkMaxNotifications();
 
+        // Play feedback
+        playSound(type);
+        vibrate(type);
+
         // Auto-dismiss if duration is specified
         if (duration === null) {
             duration = config.defaultDuration;
         }
 
+        // Animate the progress bar
         if (duration > 0) {
+            const progressFill = notificationElement.querySelector('.notification-progress-fill');
+            if (progressFill) {
+                progressFill.style.transition = `width ${duration}ms linear`;
+                requestAnimationFrame(() => {
+                    progressFill.style.width = '0%';
+                });
+            }
+
             setTimeout(() => {
-                // Check if element still exists (user might have closed it)
                 if (document.body.contains(notificationElement)) {
                     removeNotification(notificationElement);
                 }
@@ -211,7 +302,7 @@ function initializeNotifications() {
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js')
             .then(registration => {
-                console.log('Notification system initialized');
+                console.log('✓ Notification system initialized');
             })
             .catch(err => {
                 console.warn('Service Worker registration failed:', err);
@@ -221,5 +312,5 @@ function initializeNotifications() {
 
 // Export for use in other modules if needed
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = Notification;
+    module.exports = NotifyPopup;
 }

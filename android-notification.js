@@ -1,13 +1,17 @@
 /**
  * Android Notification System
  * Sends native Android notifications using the Web Notification API
+ * Falls back to in-app popup notifications (NotifyPopup) when native isn't available
  * Works on Android Chrome, Firefox, Samsung Internet, and PWA
  */
 
+// Save a reference to the browser's native Notification API before anything can overwrite it
+const NativeNotification = window.Notification;
+
 const AndroidNotification = (() => {
-    // Check if notifications are supported
-    const isSupported = () => {
-        return 'Notification' in window;
+    // Check if native notifications are supported
+    const isNativeSupported = () => {
+        return typeof NativeNotification !== 'undefined';
     };
 
     // Initialize service worker for background notifications
@@ -19,161 +23,133 @@ const AndroidNotification = (() => {
                 return true;
             } catch (error) {
                 console.warn('⚠ Service Worker registration failed (optional):', error.message);
-                // This is OK - notifications still work without it
                 return false;
             }
         }
     };
 
-    // Create emoji data URI for icon
-    const createEmojiIcon = (emoji) => {
-        const canvas = document.createElement('canvas');
-        canvas.width = canvas.height = 100;
-        const ctx = canvas.getContext('2d');
-        ctx.font = '60px Arial';
-        ctx.fillText(emoji, 20, 70);
-        return canvas.toDataURL();
-    };
-
     /**
-     * Send a native Android notification
+     * Send a native Android notification + always show in-app popup
      * @param {string} title - Notification title
+     * @param {string} type - success, error, warning, info
      * @param {object} options - Notification options
      */
-    const sendNative = (title, options = {}) => {
-        if (!isSupported()) {
-            console.warn('✗ Notifications not supported on this device');
-            return null;
+    const sendNative = (title, type = 'info', options = {}) => {
+        // Always show the in-app popup notification (this always works)
+        if (typeof NotifyPopup !== 'undefined') {
+            NotifyPopup.show(title, options.body || '', type);
         }
 
-        // Check permission
-        if (Notification.permission !== 'granted') {
-            console.warn('✗ Notification permission not granted. Request permission first.');
-            return null;
-        }
+        // Also try to send native notification if permission granted
+        if (isNativeSupported() && NativeNotification.permission === 'granted') {
+            try {
+                const nativeOpts = {
+                    body: options.body || '',
+                    requireInteraction: false,
+                    tag: options.tag || 'notification-' + Date.now(),
+                    silent: false
+                };
 
-        try {
-            const defaultOptions = {
-                requireInteraction: false,
-                tag: 'notification-' + Date.now(),
-                ...options
-            };
+                // Try service worker notification first (works better on Android)
+                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.ready.then(registration => {
+                        registration.showNotification(title, nativeOpts).catch(() => {
+                            // Fallback to direct notification
+                            new NativeNotification(title, nativeOpts);
+                        });
+                    });
+                } else {
+                    const notification = new NativeNotification(title, nativeOpts);
+                    notification.onclick = () => {
+                        window.focus();
+                        notification.close();
+                    };
+                }
 
-            // Don't include icon if it's an invalid path - let Android use default
-            if (defaultOptions.icon && defaultOptions.icon.startsWith('/')) {
-                delete defaultOptions.icon;
+                console.log('✓ Native notification sent');
+                return true;
+            } catch (error) {
+                console.warn('Native notification failed, using in-app popup:', error);
+                return true; // In-app popup already shown
             }
-            if (defaultOptions.badge && defaultOptions.badge.startsWith('/')) {
-                delete defaultOptions.badge;
-            }
-
-            console.log('📤 Sending notification:', { title, ...defaultOptions });
-
-            // Send the notification
-            const notification = new Notification(title, defaultOptions);
-
-            // Handle notification click
-            notification.onclick = () => {
-                console.log('Notification clicked');
-                window.focus();
-                notification.close();
-            };
-
-            notification.onshow = () => {
-                console.log('✓ Notification shown');
-            };
-
-            notification.onerror = (error) => {
-                console.error('✗ Notification error:', error);
-            };
-
-            console.log('✓ Notification sent successfully');
-            return notification;
-        } catch (error) {
-            console.error('✗ Failed to send notification:', error);
-            return null;
         }
+
+        return true; // In-app popup was shown
     };
 
     /**
      * Request notification permission
      */
     const requestPermission = async () => {
-        if (!isSupported()) {
-            console.warn('✗ Notifications not supported');
+        if (!isNativeSupported()) {
+            console.warn('Native notifications not supported — using in-app popups');
             return false;
         }
 
-        console.log('📋 Current permission:', Notification.permission);
-
-        if (Notification.permission === 'granted') {
-            console.log('✓ Notifications already granted');
+        if (NativeNotification.permission === 'granted') {
             return true;
         }
 
-        if (Notification.permission === 'denied') {
-            console.warn('✗ User has blocked notifications. Enable in browser settings.');
+        if (NativeNotification.permission === 'denied') {
+            console.warn('User has blocked notifications. Enable in browser settings.');
             return false;
         }
 
-        // Permission is 'default' - ask user
         try {
-            console.log('🔔 Requesting notification permission...');
-            const permission = await Notification.requestPermission();
-            console.log('✓ Permission result:', permission);
+            const permission = await NativeNotification.requestPermission();
             return permission === 'granted';
         } catch (error) {
-            console.error('✗ Error requesting permission:', error);
+            console.error('Error requesting permission:', error);
             return false;
         }
     };
 
     /**
+     * Get current permission state
+     */
+    const getPermission = () => {
+        if (!isNativeSupported()) return 'unsupported';
+        return NativeNotification.permission;
+    };
+
+    /**
      * Show success notification
-     * @param {string} title - Notification title
-     * @param {string} message - Notification message
      */
     const success = (title, message = '') => {
-        return sendNative(title, {
+        return sendNative(title, 'success', {
             body: message,
-            tag: 'notification-success'
+            tag: 'notification-success-' + Date.now()
         });
     };
 
     /**
      * Show error notification
-     * @param {string} title - Notification title
-     * @param {string} message - Notification message
      */
     const error = (title, message = '') => {
-        return sendNative(title, {
+        return sendNative(title, 'error', {
             body: message,
-            tag: 'notification-error',
-            requireInteraction: true  // Don't auto-dismiss errors
+            tag: 'notification-error-' + Date.now(),
+            requireInteraction: true
         });
     };
 
     /**
      * Show warning notification
-     * @param {string} title - Notification title
-     * @param {string} message - Notification message
      */
     const warning = (title, message = '') => {
-        return sendNative(title, {
+        return sendNative(title, 'warning', {
             body: message,
-            tag: 'notification-warning'
+            tag: 'notification-warning-' + Date.now()
         });
     };
 
     /**
      * Show info notification
-     * @param {string} title - Notification title
-     * @param {string} message - Notification message
      */
     const info = (title, message = '') => {
-        return sendNative(title, {
+        return sendNative(title, 'info', {
             body: message,
-            tag: 'notification-info'
+            tag: 'notification-info-' + Date.now()
         });
     };
 
@@ -198,15 +174,17 @@ const AndroidNotification = (() => {
                 type: 'CLOSE_ALL_NOTIFICATIONS'
             });
         }
+        // Also clear in-app popups
+        if (typeof NotifyPopup !== 'undefined') {
+            NotifyPopup.clearAll();
+        }
     };
 
     // Initialize on load
-    if (isSupported()) {
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializeServiceWorker);
-        } else {
-            initializeServiceWorker();
-        }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeServiceWorker);
+    } else {
+        initializeServiceWorker();
     }
 
     // Public API
@@ -217,9 +195,10 @@ const AndroidNotification = (() => {
         warning,
         info,
         requestPermission,
+        getPermission,
         close,
         closeAll,
-        isSupported
+        isNativeSupported
     };
 })();
 

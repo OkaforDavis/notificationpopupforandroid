@@ -2,100 +2,89 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#667eea">
-    <meta name="description" content="Native Android Notification System">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0F0F1A">
+    <meta name="description" content="Premium Android Notification Popup System — beautiful in-app notifications for mobile web apps">
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23667eea' width='192' height='192'/><text x='50%' y='50%' font-size='100' fill='white' text-anchor='middle' dominant-baseline='central'>🔔</text></svg>">
-    <title>Android Notification System</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%236C5CE7' width='100' height='100' rx='22'/><text x='50%25' y='54%25' font-size='60' fill='white' text-anchor='middle' dominant-baseline='central'>🔔</text></svg>">
+    <title>NotifyPop — Android Notifications</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🔔 Android Notification System</h1>
-            <p>Native Android notifications like BetApps & SoccerScore</p>
-            <div id="permissionStatus" class="permission-status">
-                <button id="enableNotifications" class="btn btn-permission" onclick="requestNotificationPermission()" style="display: none;">
-                    Enable Notifications
-                </button>
-                <div id="permissionGranted" class="permission-granted" style="display: none;">
-                    ✓ Notifications Enabled
-                </div>
-            </div>
+    <div class="app-wrapper">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="app-logo">🔔</div>
+            <h1>NotifyPop</h1>
+            <p>Android-style notification popups</p>
         </header>
 
-        <main>
-            <section class="controls">
-                <h2>🎯 Native Android Notifications</h2>
-                
-                <button class="btn btn-success" onclick="sendNativeSuccess()">
-                    ✓ Success Notification
+        <!-- Permission Banner -->
+        <div id="permissionBanner"></div>
+
+        <!-- Notification Type Buttons -->
+        <section class="section-card">
+            <h2>Notification Types <span class="badge">Core</span></h2>
+            <div class="btn-grid">
+                <button class="btn btn-success" id="btnSuccess" onclick="sendNativeSuccess()">
+                    <span class="btn-icon">✓</span>
+                    Success
                 </button>
-
-                <button class="btn btn-error" onclick="sendNativeError()">
-                    ✕ Error Notification
+                <button class="btn btn-error" id="btnError" onclick="sendNativeError()">
+                    <span class="btn-icon">✕</span>
+                    Error
                 </button>
-
-                <button class="btn btn-warning" onclick="sendNativeWarning()">
-                    ⚠ Warning Notification
+                <button class="btn btn-warning" id="btnWarning" onclick="sendNativeWarning()">
+                    <span class="btn-icon">⚠</span>
+                    Warning
                 </button>
-
-                <button class="btn btn-info" onclick="sendNativeInfo()">
-                    ⓘ Info Notification
+                <button class="btn btn-info" id="btnInfo" onclick="sendNativeInfo()">
+                    <span class="btn-icon">ⓘ</span>
+                    Info
                 </button>
+            </div>
+        </section>
 
-                <hr>
+        <!-- Simulate Real Actions -->
+        <section class="section-card">
+            <h2>Simulate Actions <span class="badge">Demo</span></h2>
 
-                <h2>📱 Simulate Real Actions</h2>
-                <button class="btn btn-primary" onclick="simulateUpload()">
-                    Upload File (Android Notification)
-                </button>
+            <button class="btn btn-action" id="btnUpload" onclick="simulateUpload()">
+                <span class="btn-icon">📤</span>
+                <span class="btn-text">Upload File<span>Simulates file upload with progress</span></span>
+            </button>
 
-                <button class="btn btn-primary" onclick="simulateFormSubmit()">
-                    Submit Form (Android Notification)
-                </button>
+            <button class="btn btn-action" id="btnForm" onclick="simulateFormSubmit()">
+                <span class="btn-icon">📋</span>
+                <span class="btn-text">Submit Form<span>Simulates form submission</span></span>
+            </button>
 
-                <button class="btn btn-primary" onclick="simulateDataFetch()">
-                    Fetch Data (Android Notification)
-                </button>
+            <button class="btn btn-action" id="btnFetch" onclick="simulateDataFetch()">
+                <span class="btn-icon">🔄</span>
+                <span class="btn-text">Fetch Data<span>Simulates API data loading</span></span>
+            </button>
 
-                <button class="btn btn-primary" onclick="simulateGameGoal()">
-                    ⚽ Goal Scored (Like SoccerScore)
-                </button>
+            <button class="btn btn-action" id="btnGoal" onclick="simulateGameGoal()">
+                <span class="btn-icon">⚽</span>
+                <span class="btn-text">Goal Scored<span>SoccerScore-style live alert</span></span>
+            </button>
 
-                <button class="btn btn-primary" onclick="simulateBetting()">
-                    💰 Bet Confirmed (Like BetApps)
-                </button>
+            <button class="btn btn-action" id="btnBet" onclick="simulateBetting()">
+                <span class="btn-icon">💰</span>
+                <span class="btn-text">Bet Confirmed<span>BetApp-style wager confirmation</span></span>
+            </button>
 
-                <div class="progress-demo" id="progressDemo" style="display: none; margin-top: 20px;">
-                    <p>Processing...</p>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill"></div>
-                    </div>
+            <div class="progress-demo" id="progressDemo" style="display: none;">
+                <p>Processing...</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
                 </div>
-            </section>
+            </div>
 
-            <section class="info">
-                <h2>💻 How to Use Native Notifications</h2>
-                <pre><code>// Request permission first
-await Notification.requestPermission();
-
-// Send native Android notification
-Notification.sendNative('Title', {
-    body: 'Notification message',
-    icon: '/icon-192x192.png',
-    badge: '/badge-72x72.png',
-    tag: 'notification-id'
-});
-
-// Or use the helper
-AndroidNotification.success('Done!', 'Task completed');
-AndroidNotification.error('Error', 'Something failed');
-AndroidNotification.warning('Warning', 'Check this');
-AndroidNotification.info('Info', 'FYI message');</code></pre>
-            </section>
-        </main>
+            <button class="btn-clear" id="btnClearAll" onclick="clearAllNotifications()">
+                Clear All Notifications
+            </button>
+        </section>
     </div>
 
     <div id="notificationContainer" class="notification-container"></div>
@@ -103,110 +92,63 @@ AndroidNotification.info('Info', 'FYI message');</code></pre>
     <script src="notification.js"></script>
     <script src="android-notification.js"></script>
     <script>
-        // Initialize on page load
+        // ===== INITIALIZATION =====
         window.addEventListener('load', () => {
-            console.log('🚀 App loaded');
             initializeNotifications();
-            checkNotificationPermission();
+            renderPermissionBanner();
         });
 
-        // Check if notifications are enabled
-        function checkNotificationPermission() {
-            console.log('📋 Checking notification permission...');
-            
-            if ('Notification' in window) {
-                console.log('✓ Notifications API available');
-                console.log('Permission status:', Notification.permission);
-                
-                if (Notification.permission === 'granted') {
-                    console.log('✓ Notifications already granted');
-                    document.getElementById('permissionGranted').style.display = 'block';
-                    document.getElementById('enableNotifications').style.display = 'none';
-                } else if (Notification.permission === 'default') {
-                    console.log('⚠ Permission not requested yet - show enable button');
-                    document.getElementById('enableNotifications').style.display = 'block';
-                    document.getElementById('permissionGranted').style.display = 'none';
-                } else if (Notification.permission === 'denied') {
-                    console.error('✗ Notifications are blocked by the browser');
-                    document.getElementById('enableNotifications').style.display = 'none';
-                    document.getElementById('permissionGranted').style.display = 'none';
-                }
-            } else {
-                console.error('✗ Notifications not supported in this browser');
-                document.getElementById('enableNotifications').style.display = 'none';
-            }
-        }
+        // ===== PERMISSION MANAGEMENT =====
+        function renderPermissionBanner() {
+            const banner = document.getElementById('permissionBanner');
+            const perm = AndroidNotification.getPermission();
 
-        // Request notification permission
-        function requestNotificationPermission() {
-            console.log('🔔 Requesting notification permission...');
-            
-            if ('Notification' in window) {
-                Notification.requestPermission().then(permission => {
-                    console.log('Permission result:', permission);
-                    
-                    if (permission === 'granted') {
-                        console.log('✓ Notifications enabled!');
-                        document.getElementById('permissionGranted').style.display = 'block';
-                        document.getElementById('enableNotifications').style.display = 'none';
-                        // Test notification
-                        setTimeout(() => {
-                            AndroidNotification.success('✓ Notifications Enabled', 'You will now receive native Android notifications');
-                        }, 500);
-                    } else {
-                        console.warn('✗ Permission denied or dismissed');
+            if (perm === 'granted') {
+                banner.className = 'permission-banner granted';
+                banner.innerHTML = '✓ &nbsp;Native notifications enabled';
+                banner.onclick = null;
+            } else if (perm === 'denied') {
+                banner.className = 'permission-banner denied';
+                banner.innerHTML = '✕ &nbsp;Notifications blocked — enable in browser settings';
+                banner.onclick = null;
+            } else if (perm === 'unsupported') {
+                banner.className = 'permission-banner granted';
+                banner.innerHTML = '✓ &nbsp;In-app popup notifications active';
+                banner.onclick = null;
+            } else {
+                banner.className = 'permission-banner needs-permission';
+                banner.innerHTML = '🔔 &nbsp;Tap to enable native notifications';
+                banner.onclick = async () => {
+                    const granted = await AndroidNotification.requestPermission();
+                    renderPermissionBanner();
+                    if (granted) {
+                        AndroidNotification.success('Notifications Enabled ✓', 'You will now receive native Android notifications');
                     }
-                }).catch(error => {
-                    console.error('Error requesting permission:', error);
-                });
-            } else {
-                console.error('Notifications API not available');
+                };
             }
         }
 
-        // Native notification functions
+        // ===== NOTIFICATION SENDERS =====
         function sendNativeSuccess() {
-            console.log('Sending success notification...');
-            const result = AndroidNotification.success(
-                'Success! ✓',
-                'Your action completed successfully. This is a native Android notification!'
-            );
-            if (!result) console.warn('⚠ Notification failed to send');
+            AndroidNotification.success('Success! ✓', 'Your action completed successfully.');
         }
 
         function sendNativeError() {
-            console.log('Sending error notification...');
-            const result = AndroidNotification.error(
-                'Error! ✕',
-                'Something went wrong. Check your connection and try again.'
-            );
-            if (!result) console.warn('⚠ Notification failed to send');
+            AndroidNotification.error('Error! ✕', 'Something went wrong. Please try again.');
         }
 
         function sendNativeWarning() {
-            console.log('Sending warning notification...');
-            const result = AndroidNotification.warning(
-                'Warning ⚠',
-                'Please review this carefully before proceeding.'
-            );
-            if (!result) console.warn('⚠ Notification failed to send');
+            AndroidNotification.warning('Warning ⚠', 'Please review this carefully before proceeding.');
         }
 
         function sendNativeInfo() {
-            console.log('Sending info notification...');
-            const result = AndroidNotification.info(
-                'Information ⓘ',
-                'This is just for your information.'
-            );
-            if (!result) console.warn('⚠ Notification failed to send');
+            AndroidNotification.info('Information ⓘ', 'This is just for your information.');
         }
 
-        // Simulate file upload with native notification
+        // ===== SIMULATIONS =====
         function simulateUpload() {
-            console.log('Starting upload simulation...');
             const progressDemo = document.getElementById('progressDemo');
             const progressFill = document.getElementById('progressFill');
-            
             progressDemo.style.display = 'block';
             progressFill.style.width = '0%';
 
@@ -216,68 +158,42 @@ AndroidNotification.info('Info', 'FYI message');</code></pre>
                 if (progress >= 100) {
                     progress = 100;
                     clearInterval(interval);
-                    progressFill.style.width = progress + '%';
-                    progressDemo.style.display = 'none';
-                    
-                    console.log('Upload complete, sending notification...');
-                    // Show native Android notification
-                    AndroidNotification.success(
-                        'Upload Complete ✓',
-                        'Your file has been uploaded successfully to the server.'
-                    );
+                    progressFill.style.width = '100%';
+                    setTimeout(() => { progressDemo.style.display = 'none'; }, 300);
+                    AndroidNotification.success('Upload Complete ✓', 'Your file has been uploaded successfully.');
                 }
                 progressFill.style.width = progress + '%';
             }, 500);
         }
 
-        // Simulate form submission with native notification
         function simulateFormSubmit() {
-            console.log('Starting form submission...');
             const progressDemo = document.getElementById('progressDemo');
             progressDemo.style.display = 'block';
-            
             setTimeout(() => {
                 progressDemo.style.display = 'none';
-                console.log('Form submission complete, sending notification...');
-                AndroidNotification.success(
-                    'Form Submitted ✓',
-                    'Your form has been submitted successfully.'
-                );
+                AndroidNotification.success('Form Submitted ✓', 'Your form has been submitted successfully.');
             }, 2000);
         }
 
-        // Simulate data fetch with native notification
         function simulateDataFetch() {
-            console.log('Starting data fetch...');
             const progressDemo = document.getElementById('progressDemo');
             progressDemo.style.display = 'block';
-            
             setTimeout(() => {
                 progressDemo.style.display = 'none';
-                console.log('Data fetch complete, sending notification...');
-                AndroidNotification.success(
-                    'Data Loaded ✓',
-                    'Your data has been fetched from the server.'
-                );
+                AndroidNotification.info('Data Loaded ✓', '247 records fetched from the server.');
             }, 1500);
         }
 
-        // Simulate goal scored (like SoccerScore)
         function simulateGameGoal() {
-            console.log('Goal scored!');
-            AndroidNotification.success(
-                '⚽ GOAL! Manchester United',
-                'Cristiano Ronaldo scored! 89\' - Score: 2-1'
-            );
+            AndroidNotification.success('⚽ GOAL! Manchester United', 'Cristiano Ronaldo scored! 89\' — Score: 2-1');
         }
 
-        // Simulate bet confirmation (like BetApps)
         function simulateBetting() {
-            console.log('Bet confirmed!');
-            AndroidNotification.success(
-                '💰 Bet Confirmed',
-                'Wager: $50 | Odds: 2.5 | Potential Win: $125'
-            );
+            AndroidNotification.success('💰 Bet Confirmed', 'Wager: $50 | Odds: 2.5 | Potential Win: $125');
+        }
+
+        function clearAllNotifications() {
+            AndroidNotification.closeAll();
         }
     </script>
 </body>
